@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import timezone
 
 from django.db.models import Expression
@@ -24,7 +25,8 @@ def lessons_view(lessons_service: ILessonsService):
         for c in json_body:
             serializer = CreateLessonsRequestDTO(data=c)
             if not serializer.is_valid():
-                return JsonResponse({"error": "serialization failed"}, status=400)
+                logging.error(f"serialization failed: {serializer.errors}")
+                return JsonResponse({"error": f"serialization failed"}, status=400)
 
             param = LessonParams(
                 start_time=serializer.validated_data["start_time"].astimezone(timezone.utc),

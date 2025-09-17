@@ -1,6 +1,5 @@
 import datetime
 import uuid
-import pytest
 import json
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -15,7 +14,6 @@ test_lesson_id = uuid.uuid4()
 now = datetime.datetime.now(datetime.timezone.utc)
 future_date = now + timedelta(days=2)
 
-@pytest.mark.django_db
 def test_create_lessons_success():
     mock_service = MagicMock()
     mock_service.create_lessons.return_value = [
@@ -67,3 +65,34 @@ def test_create_lessons_success():
     assert data["lessons"][0]["max_capacity"] == 10
     assert data["lessons"][0]["current_capacity"] == 10
     assert data["lessons"][0]["location"] == "home"
+
+def test_create_lessons_location_too_short():
+    mock_service = MagicMock()
+    view_function = lessons_view(mock_service)
+
+    factory = RequestFactory()
+    body = [
+        {
+            "start_time": future_date.isoformat(),
+            "lesson_level": "intermediate",
+            "lesson_name": "vinyasa",
+            "max_capacity": 10,
+            "location": "h"
+        }
+    ]
+
+    request = factory.post(
+        "/api/v1/lessons/",
+        data=json.dumps(body),
+        content_type="application/json"
+    )
+
+    response = view_function(request)
+
+    if isinstance(response, JsonResponse):
+        data = json.loads(response.content)
+    else:
+        data = response.json()
+
+    assert response.status_code == 400
+    assert data["error"] == "serialization failed"
