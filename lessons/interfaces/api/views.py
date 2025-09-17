@@ -1,5 +1,7 @@
 import json
 from datetime import timezone
+
+from django.db.models import Expression
 from django.http import JsonResponse
 from ...domain.entities import LessonParams
 from ...domain.services.services import ILessonsService
@@ -37,7 +39,10 @@ def lessons_view(lessons_service: ILessonsService):
         #TODO: handle this error
         inserted_lessons = lessons_service.create_lessons(params)
 
-        resp = [CreateLessonResponseDTO.from_domain(c).data for c in inserted_lessons]
+        try:
+            resp = [CreateLessonResponseDTO.from_domain(c).data for c in inserted_lessons]
+        except Expression as e:
+            raise f"error: {e}"
 
         return JsonResponse({"lessons": resp})
 

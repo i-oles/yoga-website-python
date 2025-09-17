@@ -33,7 +33,7 @@ class CreateLessonsRequestDTO(serializers.Serializer):
     lesson_level = serializers.CharField(min_length=3, max_length=40, allow_blank=False)
     lesson_name = serializers.CharField(min_length=3, max_length=40, allow_blank=False)
     max_capacity = serializers.IntegerField(min_value=1, allow_null=False)
-    location = serializers.CharField(min_length=5, allow_blank=False)
+    location = serializers.CharField(min_length=3, allow_blank=False)
 
 
 def translate_week_day_to_polish(week_day: int) -> str:
