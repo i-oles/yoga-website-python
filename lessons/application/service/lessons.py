@@ -38,7 +38,6 @@ def validate_params(params: list[LessonParams]):
         if param.start_time < timezone.now():
             raise BusinessError(
                 message=f"Cannot create lesson in the past (start_time={param.start_time})",
-                code="lesson_in_past",
             )
 
     return

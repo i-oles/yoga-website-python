@@ -1,12 +1,11 @@
 import json
-import logging
 from datetime import timezone
 
-from django.db.models import Expression
 from django.http import JsonResponse
-from ...domain.entities import LessonParams
-from ...domain.services.services import ILessonsService
-from ...interfaces.api.dto import CreateLessonsRequestDTO, CreateLessonResponseDTO
+from lessons.domain.entities import LessonParams
+from lessons.domain.exceptions import ValidationError
+from lessons.domain.services.services import ILessonsService
+from lessons.interfaces.api.dto import CreateLessonsRequestDTO, CreateLessonResponseDTO
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -25,9 +24,7 @@ def lessons_view(lessons_service: ILessonsService):
         for c in json_body:
             serializer = CreateLessonsRequestDTO(data=c)
             if not serializer.is_valid():
-                logging.error(f"serialization failed: {serializer.errors}")
-                return JsonResponse({"error": f"serialization failed"}, status=400)
-
+                raise ValidationError(message="serialization failed")
             param = LessonParams(
                 start_time=serializer.validated_data["start_time"].astimezone(timezone.utc),
                 lesson_level=serializer.validated_data["lesson_level"],
@@ -38,14 +35,8 @@ def lessons_view(lessons_service: ILessonsService):
 
             params.append(param)
 
-        #TODO: handle this error
         inserted_lessons = lessons_service.create_lessons(params)
-
-        try:
-            resp = [CreateLessonResponseDTO.from_domain(c).data for c in inserted_lessons]
-        except Expression as e:
-            raise f"error: {e}"
-
+        resp = [CreateLessonResponseDTO.from_domain(c).data for c in inserted_lessons]
         return JsonResponse({"lessons": resp})
 
     return create_lessons
